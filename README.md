@@ -1,10 +1,9 @@
-# BlockablePromise
-A JavaScript utility class to create promises that can be blocked, resolved, or rejected and have a timeout.
+# TimeoutPromise
+A JavaScript utility class to create promises that have a timeout and follow Promise.withResolvers().
 
 ### Features
-- Blockable: You can block the promise to prevent it from resolving or rejecting.
 - Timeout: Optionally set a timeout after which the promise will be blocked.
-- Cancelable: Cancel the promise by blocking it.
+- can run promise.reject and promise.resolve outside of promise constructor
 
 ### Example Code
 
@@ -14,13 +13,13 @@ async function testBlockablePromise() {
   const sleepTime = 5000; // 5 seconds
   const start = Date.now();
   // sleep 5 seconds
-  const sleep = new BlockablePromise((r) => setTimeout(r, sleepTime));
+  const sleep = new TimeoutPromise((r) => setTimeout(r, sleepTime));
 
-  // ============== BLOCK after 2 seconds ==============
+  // ============== REJECT after 2 seconds ==============
   (async () => {
     setTimeout(() => {
       console.log("Block the promise after 2 seconds");
-      sleep.block();
+      sleep.reject("rejected");
     }, 2000);
 
     try {
@@ -33,7 +32,7 @@ async function testBlockablePromise() {
 
   // ============== TIMEOUT after 4 seconds ==============
   (async () => {
-    const sleepWithTimeout = new BlockablePromise((r) => setTimeout(r, sleepTime), { timeout: 4000 });
+    const sleepWithTimeout = new TimeoutPromise((r) => setTimeout(r, sleepTime), { timeout: 4000 });
     try {
       const result = await sleepWithTimeout.promise;
       console.log(Date.now() - start + " resolved sucessfully");
@@ -44,7 +43,7 @@ async function testBlockablePromise() {
 
   // ============== SUCCESS after 5 seconds ==============
   (async () => {
-    const _sleep = new BlockablePromise((r) => setTimeout(r, sleepTime));
+    const _sleep = new TimeoutPromise((r) => setTimeout(r, sleepTime));
     try {
       await _sleep.promise;
       console.log(Date.now() - start + " resolved sucessfully");
