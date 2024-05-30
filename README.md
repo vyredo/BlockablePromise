@@ -16,24 +16,23 @@ async function testBlockablePromise() {
   // sleep 5 seconds
   const sleep = new BlockablePromise((r) => setTimeout(r, sleepTime));
 
-
   // ============== BLOCK after 2 seconds ==============
-  () => {
+  (async () => {
     setTimeout(() => {
       console.log("Block the promise after 2 seconds");
       sleep.block();
     }, 2000);
-  
+
     try {
       const result = await sleep.promise;
       console.log(Date.now() - start + " resolved sucessfully");
     } catch (e) {
       console.log(Date.now() - start + " Promise was", e);
     }
-  }()
+  })();
 
   // ============== TIMEOUT after 4 seconds ==============
-  () => {
+  (async () => {
     const sleepWithTimeout = new BlockablePromise((r) => setTimeout(r, sleepTime), { timeout: 4000 });
     try {
       const result = await sleepWithTimeout.promise;
@@ -41,14 +40,28 @@ async function testBlockablePromise() {
     } catch (e) {
       console.log(Date.now() - start + " Promise was", e);
     }
-  }()
+  })();
+
+  // ============== SUCCESS after 5 seconds ==============
+  (async () => {
+    const _sleep = new BlockablePromise((r) => setTimeout(r, sleepTime));
+    try {
+      await _sleep.promise;
+      console.log(Date.now() - start + " resolved sucessfully");
+    } catch (e) {
+      console.log(Date.now() - start + " Promise was", e);
+    }
+  })();
 }
+
+testBlockablePromise();
 
 
 ```
 **Logs: **
 ```
 Block the promise after 2 seconds
-2005 Promise was blocked
-4001 Promise was timeout
+2006 Promise was blocked
+4002 Promise was timeout
+5003 resolved sucessfully
 ```
