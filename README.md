@@ -15,28 +15,33 @@ async function testBlockablePromise() {
   const start = Date.now();
   // sleep 5 seconds
   const sleep = new BlockablePromise((r) => setTimeout(r, sleepTime));
-  // sleep 5 seconds with 4 second timeout
-  const sleepWithTimeout = new BlockablePromise((r) => setTimeout(r, sleepTime), { timeout: 4000 });
 
-  // cancel after 2 seconds
-  setTimeout(() => {
-    console.log("Block the promise after 2 seconds");
-    sleep.block();
-  }, 2000);
 
-  try {
-    const result = await sleep.promise;
-    console.log(Date.now() - start + " resolved sucessfully");
-  } catch (e) {
-    console.log(Date.now() - start + " Promise was", e);
-  }
+  // ============== BLOCK after 2 seconds ==============
+  () => {
+    setTimeout(() => {
+      console.log("Block the promise after 2 seconds");
+      sleep.block();
+    }, 2000);
+  
+    try {
+      const result = await sleep.promise;
+      console.log(Date.now() - start + " resolved sucessfully");
+    } catch (e) {
+      console.log(Date.now() - start + " Promise was", e);
+    }
+  }()
 
-  try {
-    const result = await sleepWithTimeout.promise;
-    console.log(Date.now() - start + " resolved sucessfully");
-  } catch (e) {
-    console.log(Date.now() - start + " Promise was", e);
-  }
+  // ============== TIMEOUT after 4 seconds ==============
+  () => {
+    const sleepWithTimeout = new BlockablePromise((r) => setTimeout(r, sleepTime), { timeout: 4000 });
+    try {
+      const result = await sleepWithTimeout.promise;
+      console.log(Date.now() - start + " resolved sucessfully");
+    } catch (e) {
+      console.log(Date.now() - start + " Promise was", e);
+    }
+  }()
 }
 
 
