@@ -1,15 +1,20 @@
-class TimeoutPromise<T> {
+type Opt = { timeout: number };
+export class TimeoutPromise<T> {
   private state: "pending" | "fulfilled" | "rejected" | "timeout" = "pending";
-  private opt?: { timeout: number };
+  private opt?: Opt;
   resolve: (value: T | PromiseLike<T>) => void = () => {};
   reject: (reason?: any) => void = () => {};
   finally: () => void = () => {};
-  promise: Promise<void | Awaited<T>>;
+  promise: Promise<undefined | Awaited<T>>;
 
-  constructor(executor?: (resolve: (value: T) => void, reject: (reason: any) => void) => void, opt?: { timeout: number });
-  constructor(opt: { timeout: number });
-  constructor(executorOrOpt?: ((resolve: (value: T) => void, reject: (reason: any) => void) => void) | { timeout: number }, opt?: { timeout: number }) {
-    if (typeof executorOrOpt === "object") {
+  constructor(executor?: (resolve: (value: T) => void, reject: (reason: any) => void) => void, opt?: Opt);
+  constructor(opt: Opt);
+  constructor(
+    executorOrOpt?: ((resolve: (value: T) => void, reject: (reason: any) => void) => void) | Opt,
+    // default in second
+    opt?: Opt
+  ) {
+    if (typeof executorOrOpt === "object" && "timeout" in executorOrOpt) {
       this.opt = executorOrOpt;
       executorOrOpt = undefined;
     } else {
@@ -17,7 +22,12 @@ class TimeoutPromise<T> {
     }
 
     // timeout, default to Infinite
-    const time = this.opt?.timeout ?? 2147483647;
+    let time = this.opt?.timeout ?? 2147483647;
+
+    // default to second
+    time = time < 1000 ? time * 1000 : time;
+
+    console.log("timeout >>> time >>>", time);
     let timeoutRef: NodeJS.Timeout | null = null;
     const timeoutPromise = new Promise<void>((_, rej) => {
       timeoutRef = setTimeout(() => {
@@ -50,6 +60,7 @@ class TimeoutPromise<T> {
         timeoutRef && clearTimeout(timeoutRef);
       });
 
-    this.promise = Promise.race([timeoutPromise, wrapPromise]);
+    const a = Promise.race([timeoutPromise, wrapPromise]);
+    this.promise = a.then(() => undefined);
   }
 }
